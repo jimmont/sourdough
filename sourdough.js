@@ -105,31 +105,49 @@ object.initUIEvent (eventName, bubbles, cancelable, view, detail);
 
 TouchEvent
 touchstart,touchmove,touchend,touchcancel
-initTouchEvent 		(type, canBubble, cancelable, view, detail, screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, <TouchList>touches, <TouchList>targetTouches, <TouchList>changedTouches, scale, rotation);
+initTouchEvent(type, canBubble, cancelable, view, detail, screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, <TouchList>touches, <TouchList>targetTouches, <TouchList>changedTouches, scale, rotation);
 
 GestureEvent
 gesturestart,gesturechange,gestureend
-initGestureEvent 	(type, canBubble, cancelable, view, detail, screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, target, scale, rotation);
+initGestureEvent(type, canBubble, cancelable, view, detail, screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, target, scale, rotation);
 */
 $.eventDefaults = {
 	Event: {bubbles:true, cancelable:true, init: function(v){
 		this.initEvent.call(v.type, v.bubbles, v.cancelable);
 	}},
 	UIEvent: {bubbles:true, cancelable:true, view:window, detail:1, init: function(v){
+console.log('?',this,v);
 		this.initUIEvent(v.type, v.bubbles, v.cancelable, v.view, v.detail);
 	}},
 	MouseEvent: {bubbles:true, cancelable:true, view:window, detail:1, screenX: 0, screenY: 0, clientX: 0, clientY: 0, ctrlKey: 0, altKey: 0, shiftKey: 0, metaKey: 0, button: 0, init: function(v){
 		this.initMouseEvent(v.type, v.bubbles, v.cancelable, v.view, v.detail, v.screenX, v.screenY, v.clientX, v.clientY, v.ctrlKey, v.altKey, v.shiftKey, v.metaKey, v.button, v.relatedTarget);
 	}},
-	KeyEvent: {},
-	KeyboardEvent: {},
-	DragEvent: {},
-	MessageEvent: {},
-	MutationEvent: {},
-	TextEvent: {},
-	TouchEvent: {},
-	GestureEvent: {}
+	KeyboardEvent: {bubbles:true, cancelable:true, view:window, ctrlKey: 0, altKey: 0, shiftKey: 0, metaKey: 0, keyCode: 0, charCode: 0, init: function(v){
+// TODO cleanup?
+		this['init'.concat(v.typeMap.type)](v.type, v.bubbles, v.cancelable, v.view, v.ctrlKey, v.altKey, v.shiftKey, v.metaKey, v.keyCode, v.charCode);
+	}},
+// TODO are the datatype defaults correct?
+	DragEvent: {bubbles:true, cancelable:true, view:window, detail:1, screenX: 0, screenY: 0, clientX: 0, clientY: 0, ctrlKey: 0, altKey: 0, shiftKey: 0, metaKey: 0, button: 0, relatedTarget:0, dataTransfer:0, init: function(v){
+		this.initDragEvent(v.type, v.bubbles, v.cancelable, v.view, v.detail, v.screenX, v.screenY, v.clientX, v.clientY, v.ctrlKey, v.altKey, v.shiftKey, v.metaKey, v.button, v.relatedTarget, v.dataTransfer);
+	}},
+	MessageEvent: {bubbles:true, cancelable:true, data:0, origin:0, lastEventId:0, source:0, ports:0, init: function(v){
+		this.initMessageEvent(v.type, v.bubbles, v.cancelable, v.data, v.origin, v.lastEventId, v.source, v.ports);
+	}},
+	MutationEvent: {bubbles:true, cancelable:true, relatedNode:0, prevValue:0, newValue:0, attrName:0, attrChange:0, init: function(v){
+		this.initMutationEvent (v.type, v.bubbles, v.cancelable, v.relatedNode, v.prevValue, v.newValue, v.attrName, v.attrChange);
+	}},
+	TextEvent: {bubbles:true, cancelable:true, view:window, data:0, inputMethod:0, locale:0, init: function(v){
+		this.initTextEvent (v.type, v.bubbles, v.cancelable, v.view, v.data, v.inputMethod, v.locale);
+	}},
+	TouchEvent: {bubbles:true, cancelable:true, view:window, detail:1, screenX: 0, screenY: 0, clientX: 0, clientY: 0, ctrlKey: 0, altKey: 0, shiftKey: 0, metaKey: 0, touches:[], targetTouches:[], changedTouches:[], scale:1, rotation:0, init: function(v){
+		this.initTouchEvent(v.type, v.bubbles, v.cancelable, v.view, v.detail, v.screenX, v.screenY, v.clientX, v.clientY, v.ctrlKey, v.altKey, v.shiftKey, v.metaKey, v.touches, v.targetTouches, v.changedTouches, v.scale, v.rotation);
+	}},
+	GestureEvent: {bubbles:true, cancelable:true, view:window, detail:1, screenX: 0, screenY: 0, clientX: 0, clientY: 0, ctrlKey: 0, altKey: 0, shiftKey: 0, metaKey: 0, target:0, scale:1, rotation:0, init: function(v){
+		this.initTouchEvent(v.type, v.bubbles, v.cancelable, v.view, v.detail, v.screenX, v.screenY, v.clientX, v.clientY, v.ctrlKey, v.altKey, v.shiftKey, v.metaKey, v.target, v.scale, v.rotation);
+	}}
 };
+$.eventDefaults.KeyEvent = $.eventDefaults.KeyboardEvent;
+
 var _, eventName, originalType, eventType, eventSupported, di = document.implementation, isPlural = /s$/;
 for(eventName in events){
 	eventName = eventName.split(',');
@@ -142,7 +160,7 @@ for(eventName in events){
 		) break;
 	};
 	eventType = {
-		type: eventSupported || 'Event';
+		type: eventSupported || 'Event',
 		original: originalType
 	};
 
@@ -151,6 +169,38 @@ for(eventName in events){
 	};
 };
 
+$.xhr = function(url, o){
+	var xhr = new XMLHttpRequest(), z, fn = function(){};
+	o = o || {};
+	z={
+		url: url || '',
+		type: o.type || 'GET',
+		data: o.data || false,
+		before: o.before || fn,
+		error: o.error || fn,
+		success: o.success || fn,
+		after: o.after || fn
+	};
+	xhr.open(z.type, z.url, true);
+	z.before.call(xhr, xhr);
+	xhr.onreadystatechange = function(e){
+		if(xhr.readyState != 4) return;
+		switch(xhr.status){
+		case 200:
+			z.success.call(xhr, e);
+		break;
+		case 301:
+			z.success.call(xhr, e);
+		break;
+		default:
+			z.error.call(xhr, e);
+		}
+		z.after.call(xhr, e);
+	};
+	xhr.send(z.data);
+	return xhr;
+}; // xhr()
+
 $.cache = {
 _uid: { }, // elements by uN {l: element, "event-" + event-handler-namespace: [{fn,bubble},{fn,bubble}...] }
 _re: {} // regex
@@ -158,6 +208,10 @@ _re: {} // regex
 $.prototype = {
 is$: true,
 toString: function(){ return this.selector; },
+xhr: function(url, o){
+	$.xhr(url, o);
+	return this;
+},
 //bind: subscribe: listen:
 bind: function(_event, fn, capture){
 	// TODO handle special case like ready, so if document.readyState = loaded/ready
@@ -184,12 +238,18 @@ trigger: function(_type, _event){
 	for(var p in defaults){
 		v[p] = v[p] || defaults[p];
 	};
+	v.typeMap = eventType;
 	v.type = _type;
-// TODO ? for MouseEvent do: v.relatedTarget = DOMELEMENT;
+// TODO ? for MouseEvent do: v.relatedTarget = DOMELEMENT; or a way to interpolate things like this?
+// TODO do we want to createEvent out here and then copy it within, or use original, or ?
 	this.each(function(){
 		var e = document.createEvent(eventType.type);
 		// do appropriate init: initEvent, initUIEvent, etc
 		v.init.call(e, v);
+		// TODO for types that aren't supported:
+		// how to apply original event props to new event so handler sees them?
+		// OR check to see that non-standard props are applied to the new event somehow
+		// OR normalize the event object
 		this.dispatchEvent(e);
 	});
 	return this;
@@ -368,7 +428,7 @@ animation: function(){
 }; // $.prototype
 
 // setup synonyms
-var s, synonyms = 'listen:bind,after:insertAfter,before:insertBefore'.split(',');
+var s, synonyms = 'listen:bind,after:insertAfter,before:insertBefore,find:query,ajax:xhr'.split(',');
 while(s=synonyms.shift()){
 	s=s.split(':');
 	$.prototype[s[0]] = $.prototype[s[1]];
