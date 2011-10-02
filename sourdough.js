@@ -35,16 +35,108 @@ var $ = function(_){
 var _u=0;
 function uid(){ return 'u'.concat(_u++); }
 
-// dictionary for eventNames
-// TODO handle special-cases (somewhere) like ready
-// http://www.kaizou.org/2010/03/generating-custom-javascript-events/
-// https://developer.mozilla.org/En/DOM/Document.createEvent
-$.eventType = {
-	// TODO when it's ready we have special case where we need to check
-	// document.readyState
-	ready: 'DOMContentLoaded'
-
+var now = (new Date()).getTime();
+$.eventType = {};
+var events = {
+// event,name,list: Event,Type,To,Fall,Thru,List which will become createEvent('Event')
+	'click,contextmenu,dblclick,DOMMouseScroll,drag,dragdrop,dragend,dragenter,dragexit,draggesture,dragleave,dragover,dragstart,drop,mousedown,mousemove,mouseout,mouseover,mouseup,mousewheel': 'MouseEvent',
+	'DOMContentLoaded,afterprint,beforecopy,beforecut,beforepaste,beforeprint,beforeunload,blur,bounce,change,CheckboxStateChange,copy,cut,error,finish,focus,hashchange,help,input,load,offline,online,paste,RadioStateChange,readystatechange,reset,resize,scroll,search,select,selectionchange,selectstart,start,stop,submit,unload': 'Event',
+	'keydown,keypress,keyup': 'KeyEvent,KeyboardEvent',
+	'beforecopy,beforecut,beforepaste,copy,cut,drag,dragend,dragenter,dragexit,draggesture,dragleave,dragover,dragstart,drop,paste': 'DragEvent,MouseEvent',
+	'message': 'MessageEvent',
+	'DOMAttrModified,DOMCharacterDataModified,DOMNodeInserted,DOMNodeInsertedIntoDocument,DOMNodeRemoved,DOMNodeRemovedFromDocument,DOMSubtreeModified': 'MutationEvent',
+	'textInput': 'TextEvent',
+	'abort,activate,beforeactivate,beforedeactivate,deactivate,DOMActivate,DOMFocusIn,DOMFocusOut,overflow,resize,scroll,select,underflow': 'UIEvent',
+	'touchstart,touchmove,touchend,touchcancel': 'TouchEvent,MouseEvent',
+	'gesturestart,gesturechange,gestureend': 'GestureEvent,MouseEvent'
 };
+/*
+Event == Events == HTMLEvents
+KeyboardEvent
+MessageEvent
+MouseEvent == MouseEvents
+MutationEvents == MutationEvent
+*ProgressEvent
+*StorageEvent
+*SVGZoomEvents
+TextEvent (in FF this is same as UIEvent)
+*WheelEvent
+UIEvent == UIEvents
+
+MouseEvent
+click,contextmenu,dblclick,DOMMouseScroll,drag,dragdrop,dragend,dragenter,dragexit,draggesture,dragleave,dragover,dragstart,drop,mousedown,mousemove,mouseout,mouseover,mouseup,mousewheel,
+object.initMouseEvent (eventName, bubbles, cancelable, view, detail, screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, button, relatedTarget);
+
+Event
+DOMContentLoaded,afterprint,beforecopy,beforecut,beforepaste,beforeprint,beforeunload,blur,bounce,change,CheckboxStateChange,copy,cut,error,finish,focus,hashchange,help,input,load,offline,online,paste,RadioStateChange,readystatechange,reset,resize,scroll,search,select,selectionchange,selectstart,start,stop,submit,unload,
+object.initEvent (eventName, bubbles, cancelable);
+
+KeyEvent
+keydown,keypress,keyup
+Firefox: object.initKeyEvent (eventName, bubbles, cancelable, view, ctrlKey, altKey, shiftKey, metaKey, keyCode, charCode);
+IE9 and all others: object.initKeyboardEvent (eventName, bubbles, cancelable, view, ctrlKey, altKey, shiftKey, metaKey, keyCode, charCode);
+
+DragEvent
+beforecopy,beforecut,beforepaste,copy,cut,drag,dragend,dragenter,dragexit,draggesture,dragleave,dragover,dragstart,drop,paste,
+object.initDragEvent (eventName, bubbles, cancelable, view, detail, screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, button, relatedTarget, dataTransfer);
+
+MessageEvent
+message
+object.initMessageEvent (eventName, bubbles, cancelable, data, origin, lastEventId, source, ports);
+see postMessage
+
+MutationEvent
+DOMAttrModified,DOMCharacterDataModified,DOMNodeInserted,DOMNodeInsertedIntoDocument,DOMNodeRemoved,DOMNodeRemovedFromDocument,DOMSubtreeModified,
+object.initMutationEvent (eventName, bubbles, cancelable, relatedNode, prevValue, newValue, attrName, attrChange);
+
+object.initOverflowEvent (orient, horizontalOverflow, verticalOverflow);
+
+TextEvent
+textInput
+object.initTextEvent (eventName, bubbles, cancelable, view, data, inputMethod, locale);
+
+UIEvent
+abort,activate,beforeactivate,beforedeactivate,deactivate,DOMActivate,DOMFocusIn,DOMFocusOut,overflow,resize,scroll,select,underflow,
+object.initUIEvent (eventName, bubbles, cancelable, view, detail);
+
+TouchEvent
+touchstart,touchmove,touchend,touchcancel
+initTouchEvent 		(type, canBubble, cancelable, view, detail, screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, <TouchList>touches, <TouchList>targetTouches, <TouchList>changedTouches, scale, rotation);
+
+GestureEvent
+gesturestart,gesturechange,gestureend
+initGestureEvent 	(type, canBubble, cancelable, view, detail, screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, target, scale, rotation);
+*/
+$.eventDefaults = {
+	Event: {bubbles:true, cancelable:true, init: function(v){
+		this.initEvent.call(this, v.type, v.bubbles, v.cancelable);
+	}},
+	UIEvent: {bubbles:true, cancelable:true, view:window, detail:1, init: function(v){
+		this.initUIEvent.call(this, v.type, v.bubbles, v.cancelable, v.view, v.detail);
+	}},
+	MouseEvent: {bubbles:true, cancelable:true, view:window, detail:1, screenX: 0, screenY: 0, clientX: 0, clientY: 0, ctrlKey: 0, altKey: 0, shiftKey: 0, metaKey: 0, button: 0, init: function(v){
+		this.initMouseEvent(this, v.type, v.bubbles, v.cancelable, v.view, v.detail, v.screenX, v.screenY, v.clientX, v.clientY, v.ctrlKey, v.altKey, v.shiftKey, v.metaKey, v.button, v.relatedTarget);
+	}}
+	//MessageEvent: {}
+};
+var _, eventName, eventType, eventSupported, di = document.implementation, isPlural = /s$/;
+for(eventName in events){
+	eventName = eventName.split(',');
+	eventType = events[eventName].split(',');
+	while(eventSupported = eventType.shift()){
+		if(
+			di.hasFeature(isPlural.test(eventSupported) ? eventSupported : eventSupported.concat('s'), '')
+			|| window[eventSupported]
+		) break;
+	};
+	eventType = eventSupported || 'Event';
+	while(_ = eventName.shift()){
+		$.eventType[_] = eventType;
+	};
+};
+now = (new Date()).getTime() - now;
+console.log('time',now);
+
 $.cache = {
 _uid: { }, // elements by uN {l: element, "event-" + event-handler-namespace: [{fn,bubble},{fn,bubble}...] }
 _re: {} // regex
@@ -72,17 +164,44 @@ unbind: function(_event, fn, capture){
 	return this;
 },
 // trigger: fire: dispatch:
-trigger: function(_type){
+trigger: function(_type, _event){
 	// TODO create and dispatch an event on elements
 	// TODO convert _type to something appropriate using $.eventType
 	// like UIEvent, 
 	// TODO handle arguments for initEvent
 	//var _create = document.createEvent;//,
-	var type = $.eventType[_type] || 'UIEvent';
+	// TODO use hasFeature to detect support (described above)
+	// eg var supported = document.implementation.hasFeature('Events', '2.0')
+	var type = $.eventType[_type] || 'Event', v = _event || {}, defaults = $.eventDefaults[type];
+	for(var p in defaults){
+		v[p] = v[p] || defaults[p];
+	};
+	v.type = _type;
+// for MouseEvent do: v.relatedTarget = DOMELEMENT;
 	this.each(function(){
 		var e = document.createEvent(type);
 		// do appropriate init: initEvent, initUIEvent, etc
-		e.initUIEvent(_type, false, false);
+		// TODO allow for args and defaults
+// blah(target, args)
+// e.initKeyboardEvent.apply(e, Array.prototype.slice.call(arguments, 1));
+		switch(type){
+		case 'Event':
+			e.initEvent(_type, v.bubbles, v.cancelable);
+		break;
+		case 'UIEvent':
+			e.initUIEvent(_type, v.bubbles, v.cancelable, v.view, v.detail);
+		break;
+// TODO setup all the defaults for this
+		case 'MouseEvent':
+			e.initMouseEvent(_type, v.bubbles, v.cancelable, v.view,
+				v.detail, v.screenX, v.screenY, v.clientX, v.clientY,
+				v.ctrlKey, v.altKey, v.shiftKey, v.metaKey,
+				v.button, v.relatedTarget);
+		break;
+		case 'MutationEvents':
+		break;
+	// TODO
+		};
 		this.dispatchEvent(e);
 	});
 	return this;
@@ -259,6 +378,7 @@ animation: function(){
 	return this;
 }
 }; // $.prototype
+
 // setup synonyms
 var s, synonyms = 'listen:bind,after:insertAfter,before:insertBefore'.split(',');
 while(s=synonyms.shift()){
