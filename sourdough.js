@@ -35,12 +35,16 @@ var $ = function(_){
 var _u=0;
 function uid(){ return 'u'.concat(_u++); }
 
-var now = (new Date()).getTime();
 $.eventType = {};
 var events = {
-// event,name,list: Event,Type,To,Fall,Thru,List which will become createEvent('Event')
+/* event,name,list: FirstInList,Event,Types,To,Fall,Thru,SupportedEventTypeList
+	which becomes {type:Supported-Event-Type, original:FirstInList}
+	and is used for: createEvent('Supported-Event-Type')
+
+	note special '_custom' type used for any undefined types
+*/
 	'click,contextmenu,dblclick,DOMMouseScroll,drag,dragdrop,dragend,dragenter,dragexit,draggesture,dragleave,dragover,dragstart,drop,mousedown,mousemove,mouseout,mouseover,mouseup,mousewheel': 'MouseEvent',
-	'DOMContentLoaded,afterprint,beforecopy,beforecut,beforepaste,beforeprint,beforeunload,blur,bounce,change,CheckboxStateChange,copy,cut,error,finish,focus,hashchange,help,input,load,offline,online,paste,RadioStateChange,readystatechange,reset,resize,scroll,search,select,selectionchange,selectstart,start,stop,submit,unload': 'Event',
+	'_custom,DOMContentLoaded,afterprint,beforecopy,beforecut,beforepaste,beforeprint,beforeunload,blur,bounce,change,CheckboxStateChange,copy,cut,error,finish,focus,hashchange,help,input,load,offline,online,paste,RadioStateChange,readystatechange,reset,resize,scroll,search,select,selectionchange,selectstart,start,stop,submit,unload': 'Event',
 	'keydown,keypress,keyup': 'KeyEvent,KeyboardEvent',
 	'beforecopy,beforecut,beforepaste,copy,cut,drag,dragend,dragenter,dragexit,draggesture,dragleave,dragover,dragstart,drop,paste': 'DragEvent,MouseEvent',
 	'message': 'MessageEvent',
@@ -109,33 +113,43 @@ initGestureEvent 	(type, canBubble, cancelable, view, detail, screenX, screenY, 
 */
 $.eventDefaults = {
 	Event: {bubbles:true, cancelable:true, init: function(v){
-		this.initEvent.call(this, v.type, v.bubbles, v.cancelable);
+		this.initEvent.call(v.type, v.bubbles, v.cancelable);
 	}},
 	UIEvent: {bubbles:true, cancelable:true, view:window, detail:1, init: function(v){
-		this.initUIEvent.call(this, v.type, v.bubbles, v.cancelable, v.view, v.detail);
+		this.initUIEvent(v.type, v.bubbles, v.cancelable, v.view, v.detail);
 	}},
 	MouseEvent: {bubbles:true, cancelable:true, view:window, detail:1, screenX: 0, screenY: 0, clientX: 0, clientY: 0, ctrlKey: 0, altKey: 0, shiftKey: 0, metaKey: 0, button: 0, init: function(v){
-		this.initMouseEvent(this, v.type, v.bubbles, v.cancelable, v.view, v.detail, v.screenX, v.screenY, v.clientX, v.clientY, v.ctrlKey, v.altKey, v.shiftKey, v.metaKey, v.button, v.relatedTarget);
-	}}
-	//MessageEvent: {}
+		this.initMouseEvent(v.type, v.bubbles, v.cancelable, v.view, v.detail, v.screenX, v.screenY, v.clientX, v.clientY, v.ctrlKey, v.altKey, v.shiftKey, v.metaKey, v.button, v.relatedTarget);
+	}},
+	KeyEvent: {},
+	KeyboardEvent: {},
+	DragEvent: {},
+	MessageEvent: {},
+	MutationEvent: {},
+	TextEvent: {},
+	TouchEvent: {},
+	GestureEvent: {}
 };
-var _, eventName, eventType, eventSupported, di = document.implementation, isPlural = /s$/;
+var _, eventName, originalType, eventType, eventSupported, di = document.implementation, isPlural = /s$/;
 for(eventName in events){
 	eventName = eventName.split(',');
 	eventType = events[eventName].split(',');
+	originalType = eventType[0];
 	while(eventSupported = eventType.shift()){
 		if(
 			di.hasFeature(isPlural.test(eventSupported) ? eventSupported : eventSupported.concat('s'), '')
 			|| window[eventSupported]
 		) break;
 	};
-	eventType = eventSupported || 'Event';
+	eventType = {
+		type: eventSupported || 'Event';
+		original: originalType
+	};
+
 	while(_ = eventName.shift()){
 		$.eventType[_] = eventType;
 	};
 };
-now = (new Date()).getTime() - now;
-console.log('time',now);
 
 $.cache = {
 _uid: { }, // elements by uN {l: element, "event-" + event-handler-namespace: [{fn,bubble},{fn,bubble}...] }
@@ -165,43 +179,17 @@ unbind: function(_event, fn, capture){
 },
 // trigger: fire: dispatch:
 trigger: function(_type, _event){
-	// TODO create and dispatch an event on elements
-	// TODO convert _type to something appropriate using $.eventType
-	// like UIEvent, 
-	// TODO handle arguments for initEvent
-	//var _create = document.createEvent;//,
-	// TODO use hasFeature to detect support (described above)
-	// eg var supported = document.implementation.hasFeature('Events', '2.0')
-	var type = $.eventType[_type] || 'Event', v = _event || {}, defaults = $.eventDefaults[type];
+	// create and dispatch an event on elements
+	var eventType = $.eventType[_type] || $.eventType._custom, v = _event || {}, defaults = $.eventDefaults[eventType.type];
 	for(var p in defaults){
 		v[p] = v[p] || defaults[p];
 	};
 	v.type = _type;
-// for MouseEvent do: v.relatedTarget = DOMELEMENT;
+// TODO ? for MouseEvent do: v.relatedTarget = DOMELEMENT;
 	this.each(function(){
-		var e = document.createEvent(type);
+		var e = document.createEvent(eventType.type);
 		// do appropriate init: initEvent, initUIEvent, etc
-		// TODO allow for args and defaults
-// blah(target, args)
-// e.initKeyboardEvent.apply(e, Array.prototype.slice.call(arguments, 1));
-		switch(type){
-		case 'Event':
-			e.initEvent(_type, v.bubbles, v.cancelable);
-		break;
-		case 'UIEvent':
-			e.initUIEvent(_type, v.bubbles, v.cancelable, v.view, v.detail);
-		break;
-// TODO setup all the defaults for this
-		case 'MouseEvent':
-			e.initMouseEvent(_type, v.bubbles, v.cancelable, v.view,
-				v.detail, v.screenX, v.screenY, v.clientX, v.clientY,
-				v.ctrlKey, v.altKey, v.shiftKey, v.metaKey,
-				v.button, v.relatedTarget);
-		break;
-		case 'MutationEvents':
-		break;
-	// TODO
-		};
+		v.init.call(e, v);
 		this.dispatchEvent(e);
 	});
 	return this;
