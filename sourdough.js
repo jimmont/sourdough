@@ -32,6 +32,10 @@ var $ = function(_){
 	return this;
 };
 
+$.version = new String('0.1');
+$.version.number = 0.1;
+$.version.released = "2011-10-2";
+
 var _u=0;
 function uid(){ return 'u'.concat(_u++); }
 
@@ -45,7 +49,7 @@ var events = {
 */
 	'click,contextmenu,dblclick,DOMMouseScroll,drag,dragdrop,dragend,dragenter,dragexit,draggesture,dragleave,dragover,dragstart,drop,mousedown,mousemove,mouseout,mouseover,mouseup,mousewheel': 'MouseEvent',
 	'_custom,DOMContentLoaded,afterprint,beforecopy,beforecut,beforepaste,beforeprint,beforeunload,blur,bounce,change,CheckboxStateChange,copy,cut,error,finish,focus,hashchange,help,input,load,offline,online,paste,RadioStateChange,readystatechange,reset,resize,scroll,search,select,selectionchange,selectstart,start,stop,submit,unload': 'Event',
-	'keydown,keypress,keyup': 'KeyEvent,KeyboardEvent',
+	'keydown,keypress,keyup': 'KeyboardEvent',
 	'beforecopy,beforecut,beforepaste,copy,cut,drag,dragend,dragenter,dragexit,draggesture,dragleave,dragover,dragstart,drop,paste': 'DragEvent,MouseEvent',
 	'message': 'MessageEvent',
 	'DOMAttrModified,DOMCharacterDataModified,DOMNodeInserted,DOMNodeInsertedIntoDocument,DOMNodeRemoved,DOMNodeRemovedFromDocument,DOMSubtreeModified': 'MutationEvent',
@@ -112,41 +116,47 @@ gesturestart,gesturechange,gestureend
 initGestureEvent(type, canBubble, cancelable, view, detail, screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, target, scale, rotation);
 */
 $.eventDefaults = {
-	Event: {bubbles:true, cancelable:true, init: function(v){
-		this.initEvent.call(v.type, v.bubbles, v.cancelable);
-	}},
-	UIEvent: {bubbles:true, cancelable:true, view:window, detail:1, init: function(v){
-console.log('?',this,v);
-		this.initUIEvent(v.type, v.bubbles, v.cancelable, v.view, v.detail);
-	}},
-	MouseEvent: {bubbles:true, cancelable:true, view:window, detail:1, screenX: 0, screenY: 0, clientX: 0, clientY: 0, ctrlKey: 0, altKey: 0, shiftKey: 0, metaKey: 0, button: 0, init: function(v){
-		this.initMouseEvent(v.type, v.bubbles, v.cancelable, v.view, v.detail, v.screenX, v.screenY, v.clientX, v.clientY, v.ctrlKey, v.altKey, v.shiftKey, v.metaKey, v.button, v.relatedTarget);
-	}},
-	KeyboardEvent: {bubbles:true, cancelable:true, view:window, ctrlKey: 0, altKey: 0, shiftKey: 0, metaKey: 0, keyCode: 0, charCode: 0, init: function(v){
-// TODO cleanup?
-		this['init'.concat(v.typeMap.type)](v.type, v.bubbles, v.cancelable, v.view, v.ctrlKey, v.altKey, v.shiftKey, v.metaKey, v.keyCode, v.charCode);
-	}},
-// TODO are the datatype defaults correct?
-	DragEvent: {bubbles:true, cancelable:true, view:window, detail:1, screenX: 0, screenY: 0, clientX: 0, clientY: 0, ctrlKey: 0, altKey: 0, shiftKey: 0, metaKey: 0, button: 0, relatedTarget:0, dataTransfer:0, init: function(v){
-		this.initDragEvent(v.type, v.bubbles, v.cancelable, v.view, v.detail, v.screenX, v.screenY, v.clientX, v.clientY, v.ctrlKey, v.altKey, v.shiftKey, v.metaKey, v.button, v.relatedTarget, v.dataTransfer);
-	}},
-	MessageEvent: {bubbles:true, cancelable:true, data:0, origin:0, lastEventId:0, source:0, ports:0, init: function(v){
-		this.initMessageEvent(v.type, v.bubbles, v.cancelable, v.data, v.origin, v.lastEventId, v.source, v.ports);
-	}},
-	MutationEvent: {bubbles:true, cancelable:true, relatedNode:0, prevValue:0, newValue:0, attrName:0, attrChange:0, init: function(v){
-		this.initMutationEvent (v.type, v.bubbles, v.cancelable, v.relatedNode, v.prevValue, v.newValue, v.attrName, v.attrChange);
-	}},
-	TextEvent: {bubbles:true, cancelable:true, view:window, data:0, inputMethod:0, locale:0, init: function(v){
-		this.initTextEvent (v.type, v.bubbles, v.cancelable, v.view, v.data, v.inputMethod, v.locale);
-	}},
-	TouchEvent: {bubbles:true, cancelable:true, view:window, detail:1, screenX: 0, screenY: 0, clientX: 0, clientY: 0, ctrlKey: 0, altKey: 0, shiftKey: 0, metaKey: 0, touches:[], targetTouches:[], changedTouches:[], scale:1, rotation:0, init: function(v){
-		this.initTouchEvent(v.type, v.bubbles, v.cancelable, v.view, v.detail, v.screenX, v.screenY, v.clientX, v.clientY, v.ctrlKey, v.altKey, v.shiftKey, v.metaKey, v.touches, v.targetTouches, v.changedTouches, v.scale, v.rotation);
-	}},
-	GestureEvent: {bubbles:true, cancelable:true, view:window, detail:1, screenX: 0, screenY: 0, clientX: 0, clientY: 0, ctrlKey: 0, altKey: 0, shiftKey: 0, metaKey: 0, target:0, scale:1, rotation:0, init: function(v){
-		this.initTouchEvent(v.type, v.bubbles, v.cancelable, v.view, v.detail, v.screenX, v.screenY, v.clientX, v.clientY, v.ctrlKey, v.altKey, v.shiftKey, v.metaKey, v.target, v.scale, v.rotation);
-	}}
+	default: function(v, props){
+		// TODO are the datatype defaults correct?
+		var undef, item, result = [], _default = {bubbles:true,cancelable:true,view:window,detail:0,screenX:0,screenY:0,clientX:0,clientY:0,ctrlKey:0,altKey:0,shiftKey:0,metaKey:0,button:0,relatedTarget:0,keyCode:0,charCode:0,dataTransfer:0,data:0,origin:0,lastEventId:0,source:0,ports:0,relatedNode:0,prevValue:'',newValue:'',attrName:'',attrChange:'',inputMethod:0,locale:'',target:0,touches:[],targetTouches:[],changedTouches:[],scale:0,rotation:0};
+		props = props.split(',');
+		while(item = props.shift()){
+				result.push( v[item] !== undef ? v[item] : _default[item] );
+		};
+		return result;
+	},
+	Event: function(v){
+		this.initEvent.apply(this, $.eventDefaults.default(v, 'type,bubbles,cancelable'));
+	},
+	UIEvent: function(v){
+		this.initUIEvent.apply(this, $.eventDefaults.default(v, 'type,bubbles,cancelable,view,detail'));
+	},
+	MouseEvent: function(v){
+		this.initMouseEvent.apply(this, $.eventDefaults.default(v, 'type,bubbles,cancelable,view,detail,screenX,screenY,clientX,clientY,ctrlKey,altKey,shiftKey,metaKey,button,relatedTarget'));
+	},
+	KeyboardEvent: function(v){
+		// FF uses initKeyEvent
+		this[this.initKeyEvent ? 'initKeyEvent':'initKeyboardEvent'].apply(this, $.eventDefaults.default(v, 'type,bubbles,cancelable,view,ctrlKey,altKey,shiftKey,metaKey,keyCode,charCode'));
+	},
+	DragEvent: function(v){
+		this.initDragEvent.apply(this, $.eventDefaults.default(v, 'type,bubbles,cancelable,view,detail,screenX,screenY,clientX,clientY,ctrlKey,altKey,shiftKey,metaKey,button,relatedTarget,dataTransfer'));
+	},
+	MessageEvent: function(v){
+		this.initMessageEvent.apply(this, $.eventDefaults.default(v, 'type,bubbles,cancelable,data,origin,lastEventId,source,ports'));
+	},
+	MutationEvent: function(v){
+		this.initMutationEvent.apply(this, $.eventDefaults.default(v, 'type,bubbles,cancelable,relatedNode,prevValue,newValue,attrName,attrChange'));
+	},
+	TextEvent: function(v){
+		this.initTextEvent.apply(this, $.eventDefaults.default(v, 'type,bubbles,cancelable,view,data,inputMethod,locale'));
+	},
+	TouchEvent: function(v){
+		this.initTouchEvent.apply(this, $.eventDefaults.default(v, 'type,bubbles,cancelable,view,detail,screenX,screenY,clientX,clientY,ctrlKey,altKey,shiftKey,metaKey,touches,targetTouches,changedTouches,scale,rotation'));
+	},
+	GestureEvent: function(v){
+		this.initTouchEvent.apply(this, $.eventDefaults.default(v, 'type,bubbles,cancelable,view,detail,screenX,screenY,clientX,clientY,ctrlKey,altKey,shiftKey,metaKey,target,scale,rotation'));
+	}
 };
-$.eventDefaults.KeyEvent = $.eventDefaults.KeyboardEvent;
 
 var _, eventName, originalType, eventType, eventSupported, di = document.implementation, isPlural = /s$/;
 for(eventName in events){
@@ -160,7 +170,7 @@ for(eventName in events){
 		) break;
 	};
 	eventType = {
-		type: eventSupported || 'Event',
+		supported: eventSupported || 'Event',
 		original: originalType
 	};
 
@@ -206,6 +216,8 @@ _uid: { }, // elements by uN {l: element, "event-" + event-handler-namespace: [{
 _re: {} // regex
 };
 $.prototype = {
+constructor: $,
+version: $.version,
 is$: true,
 toString: function(){ return this.selector; },
 xhr: function(url, o){
@@ -234,18 +246,15 @@ unbind: function(_event, fn, capture){
 // trigger: fire: dispatch:
 trigger: function(_type, _event){
 	// create and dispatch an event on elements
-	var eventType = $.eventType[_type] || $.eventType._custom, v = _event || {}, defaults = $.eventDefaults[eventType.type];
-	for(var p in defaults){
-		v[p] = v[p] || defaults[p];
-	};
-	v.typeMap = eventType;
+	var v = _event || {};
+	// default eventType maps onto eventType, can set it directly via optional _event, or try to get it based on _type, otherwise default to '_custom'
+	v.eventType = v.eventType || $.eventType[_type] || $.eventType._custom;
 	v.type = _type;
 // TODO ? for MouseEvent do: v.relatedTarget = DOMELEMENT; or a way to interpolate things like this?
-// TODO do we want to createEvent out here and then copy it within, or use original, or ?
+	var e = document.createEvent(v.eventType.supported);
+	// do appropriate init: initEvent, initUIEvent, etc
+	$.eventDefaults[v.eventType.supported].call(e, v);
 	this.each(function(){
-		var e = document.createEvent(eventType.type);
-		// do appropriate init: initEvent, initUIEvent, etc
-		v.init.call(e, v);
 		// TODO for types that aren't supported:
 		// how to apply original event props to new event so handler sees them?
 		// OR check to see that non-standard props are applied to the new event somehow
@@ -428,7 +437,7 @@ animation: function(){
 }; // $.prototype
 
 // setup synonyms
-var s, synonyms = 'listen:bind,after:insertAfter,before:insertBefore,find:query,ajax:xhr'.split(',');
+var s, synonyms = 'subscribe:bind,listen:bind,after:insertAfter,before:insertBefore,find:query,ajax:xhr'.split(',');
 while(s=synonyms.shift()){
 	s=s.split(':');
 	$.prototype[s[0]] = $.prototype[s[1]];
