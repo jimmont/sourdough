@@ -154,7 +154,7 @@ $.eventDefaults = {
 		this.initTouchEvent.apply(this, $.eventDefaults.default(v, 'type,bubbles,cancelable,view,detail,screenX,screenY,clientX,clientY,ctrlKey,altKey,shiftKey,metaKey,touches,targetTouches,changedTouches,scale,rotation'));
 	},
 	GestureEvent: function(v){
-		this.initTouchEvent.apply(this, $.eventDefaults.default(v, 'type,bubbles,cancelable,view,detail,screenX,screenY,clientX,clientY,ctrlKey,altKey,shiftKey,metaKey,target,scale,rotation'));
+		this.initGestureEvent.apply(this, $.eventDefaults.default(v, 'type,bubbles,cancelable,view,detail,screenX,screenY,clientX,clientY,ctrlKey,altKey,shiftKey,metaKey,target,scale,rotation'));
 	}
 };
 
@@ -168,6 +168,7 @@ for(eventName in events){
 			di.hasFeature(isPlural.test(eventSupported) ? eventSupported : eventSupported.concat('s'), '')
 			|| window[eventSupported]
 		) break;
+		else eventSupported = '';
 	};
 	eventType = {
 		supported: eventSupported || 'Event',
