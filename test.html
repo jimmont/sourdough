@@ -1,0 +1,151 @@
+<!doctype html>
+<head>
+<script src="sourdough.js"></script>
+<script>
+$(window).bind('DOMContentLoaded',function(e){
+	console.log(e.type,this);
+});
+
+if(!window.console) console = {log:function(){}};
+
+var test = function(def){
+/* def: {
+	title: string,
+	columns: [{name:handler},{},...]
+	}
+*/
+	this.title = def.title;
+	this.columns = def.columns;
+	this.setup();
+};
+test.prototype = {
+/*
+	description: '',
+	assert: function(_){ return _ === 10 ? true:false; }, // success or failure check
+*/
+	run: function(statement){
+	try{
+	setTimeout(new Function(''.concat(
+	//console.log(''.concat(
+		'var i=0, l, now = (new Date()).getTime();',
+		'try{',
+		'while(i++<100){ l = ',statement, '};',
+		'console.log((new Date()).getTime()-now, "ms to do: ","',statement.replace(/"/g,'\\"'),'",l.length,"items",l);',
+		'}catch(err){ console.log("!test failed:",err); };'
+//	));
+	)),0);
+	}catch(err){
+		console.log("!can't setup test:",statement,' error is:',err);
+	}
+	}, // run()
+	setup: function(def){
+	/* div > (h2 > title), (table > headings, rows)
+	* def: { 
+		title:
+		headings: [list of heading strings]
+		}
+	*/
+		var d = document.createElement('div');
+		d.id = this.title.replace(/^[a-z0-9_-]/gi,'');
+		var h = document.createElement('h2');
+		h.appendChild(document.createTextNode(this.title));
+		d.appendChild(h);
+		
+	}, // setup()
+}; // test.prototype
+
+$(window).bind('load',function(){
+
+var perf = new test({
+	title: 'performance',
+	columns: [
+{framework: function(){ return this.target.jQuery ? 'jQuery':(this.target.sourdough ? 'sourdough':'?'); }},
+{test: function(){ return this.statement; }},
+{count: function(){ return this.result.length || 0; }},
+{average: function(){ return Math.round(this.time/this.passes); }},
+{total: function(){ return this.time; }},
+{passes: function(){ return this.iterations || 0; }}
+	]
+});
+return;
+
+test("$('.child')");
+test("$('.child')");
+test("$('.child.b, .parent')");
+test("$('.child.b').add('.parent')");
+test("$('.child').filter('.b').add('.parent')");
+test('$(".x")');
+test("$('.b').filter(\"b\")");
+test("$('.b')");
+
+// ###
+test("$('b.child.b');");
+test("$('.child.b').filter('b');");
+test("$('.child').filter('b.b');");
+test("$('b').filter('.child.b');");
+test("$([document.body,document.body.parentNode]);");
+test("$(document.body).add(document.body.parentNode);");
+test("$('html').add('body');");
+test("$('html,body');");
+test("/\\bx\\b/.test(document.body.className);");
+test("$('body.x');");
+test("$('body').filter('.x');");
+test("$(document.body).filter('.x');");
+test("$('.x').add('.y').find('b');");
+test("$('.x b,.y b');");
+test("$('.x,.y').find('b');");
+test("$('>p>span','#special');");
+test("$('#special').children('p').children('span');");
+test("$('#special > p > span');");
+test("$('.child').not($('#parent').find('.child')).not($('#span').find('.child'));");
+test("$('.child').not('#parent .child').not('#span .child');");
+test("$('.child').not('#parent .child, #span .child');");
+test("$('.child:not(#parent .child, #span .child)');");
+test("$('#special .sub span:first-child b');");
+test("$('#special').find('b').parents('.sub span:first-child');");
+test("$('#special').find('.sub span:first-child b');");
+test("$('#special').find('.sub').find('span:first-child b');");
+test("$('.sub span:first-child b','#special');");
+test("$('#span');");
+test("$(document.getElementById('span'));");
+test("$(document.getElementsByTagName('div')).find('.b');");
+test("$(document.getElementsByTagName('b')).filter('.b');");
+test("$('b.b');");
+test("$('.b');");
+test("$(document.body);");
+test("$('body');");
+test("$('.p > .q',document.getElementById('a'));");
+test("$('.p',document.getElementById('a')).children('.q');");
+test("$('.b',document.getElementById('span'));");
+test("$('span').filter([id=child]);");
+test("$('[id=child]');");
+test("$('span[id=child]');");
+test("$('#parent').children('.child');");
+test("$('#parent > .child');");
+test("$('.p.r','#a');");
+test("$('.p','#a').filter('.r');");
+test("$('.p','#a').find('.q');");
+test("$('.p .q','#a');");
+test("$('.b','#span');");
+test("$('#span').find('.b');");
+test("$('#span .b')");
+test("$(document.getElementById('span')).find('.b');");
+test("$(document.getElementById('none')).find('.b');");
+test("$('#top_728x90_ad,#ad-slot-right,#ad-slot-bottomRight,#ad-slot-bottomRight2,#top_980_ad,#adBottom,#wp-adBackground,#wp-fullPageInterstitial,#wetpaint-internal-ad');");
+test("$('#span,#a,#b,#c');");
+test("$([document.getElementById('span'),document.getElementById('a'),document.getElementById('b'),document.getElementById('c')]);");
+}); // load()
+</script>
+</head><body>
+
+<div id="performance">
+<h2>performance</h2>
+<table><tr>
+<th>framework</th>
+<th>test</th>
+<th>count</th>
+<th>total</th>
+<th>average</th>
+</tr></table>
+</div>
+</body></html>

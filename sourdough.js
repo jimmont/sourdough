@@ -1,3 +1,5 @@
+(function(){ load_time = (new Date()).getTime(); })();
+
 (function(){
 if(window.$) return;
 if(!document.querySelectorAll){
@@ -8,28 +10,31 @@ var push = Array.prototype.push,
 	concat = Array.prototype.concat,
 	splice = Array.prototype.splice,
 	slice = Array.prototype.slice;
-var $ = function(_){
-	_ = typeof _ != 'undefined' ? _ : false;
-	if(!(this instanceof $)) return new $(_);
-	this.length = 0;
-	this.noDupe = 0;
-	this.uid = {};
-	this.selector = _.toString();
-	if(_.constructor == String){ // css selector
-		this[this.length++] = document;
-		this.query(_);
-	}else if(_ instanceof NodeList){
-		push.apply(this, slice.call(_,0));
-	}else if(_.constructor == Array){
-		// map the list items over onto this object
-		concat.apply(this, _);
-		this.uniq();
-	}else if(_ && (_.constructor != Function) ){
-		push.call(this, _);
+var $ = function(){
+	var _, undef, self = this, i=0, l=arguments.length;
+	if(!(self instanceof $)) self = new $();
+	self.length = 0;
+	self.noDupe = 0;
+	self.uid = {};
+	self.selector = [];
+	while(i<l){
+		_ = arguments[i++];
+		if(_.constructor == String){ // css selector
+			self[self.length++] = document;
+			self.query(_);
+		}else if(_ instanceof NodeList){
+			push.apply(self, slice.call(_,0));
+		}else if(_.constructor == Array){
+			// map the list items over onto self object
+			push.apply(self,slice.call($.apply(null,_),0));
+	// TODO optimize??  self.uniq();
+		}else if(_ && (_.constructor != Function) ){
+			push.call(self, _);
+		};
 	};
 	// TODO do we want to do something with functions?
-	
-	return this;
+
+	return self;
 };
 
 $.version = new String('0.1');
@@ -53,7 +58,7 @@ var events = {
 	'beforecopy,beforecut,beforepaste,copy,cut,drag,dragend,dragenter,dragexit,draggesture,dragleave,dragover,dragstart,drop,paste': 'DragEvent,MouseEvent',
 	'message': 'MessageEvent',
 	'DOMAttrModified,DOMCharacterDataModified,DOMNodeInserted,DOMNodeInsertedIntoDocument,DOMNodeRemoved,DOMNodeRemovedFromDocument,DOMSubtreeModified': 'MutationEvent',
-	'textInput': 'TextEvent',
+	'textInput': 'TextEvent,UIEvent',
 	'abort,activate,beforeactivate,beforedeactivate,deactivate,DOMActivate,DOMFocusIn,DOMFocusOut,overflow,resize,scroll,select,underflow': 'UIEvent',
 	'touchstart,touchmove,touchend,touchcancel': 'TouchEvent,MouseEvent',
 	'gesturestart,gesturechange,gestureend': 'GestureEvent,MouseEvent'
@@ -321,6 +326,14 @@ offset: function(){
 attr: function(){
 	return this;
 },
+create: function(){
+// TODO create elements
+	var i=0,l=arguments.length;
+	while(i<l){
+
+	};
+	return this;
+},
 html: function(_html){
 	// TODO review window.innerHTML, need checks, esp Fragment.innerHTML
 	this.each(function(){
@@ -448,3 +461,4 @@ while(s=synonyms.shift()){
 //$('body').listen('DOMContentLoaded',function(){ /*TODO trigger event on body,document,html */ },false);
 window.$ = $;
 })();
+load_time = (new Date()).getTime() - load_time;

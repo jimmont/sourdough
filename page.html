@@ -1,0 +1,48 @@
+<!doctype html>
+<head>
+<script src="sourdough.js"></script>
+<script>
+
+
+$(document).each(function(){
+}).listen('DOMContentLoaded',function(){
+var o = $('div',['body',document,window],{a:1});
+console.log(o.length,o);
+return;
+	console.log('--',this);
+	$(this).find('a').each(function(a){
+		this.appendChild(document.createTextNode(a));
+	});
+});
+
+/*
+$(window).bind('DOMContentLoaded',function(e){
+	console.log(e.type,this);
+}).each(function(){
+	console.log(this);
+});
+$(document).bind('DOMContentLoaded',function(e){
+	console.log(e.type,this);
+}).each(function(){
+	console.log(this);
+});
+console.log($(window).listen('load',function(){
+	$('body').bind('keypress',function(e){ console.log(e.type,e); }).trigger('keypress');
+	$('body').trigger('keypress').trigger('keypress');
+// TODO test other events too
+//	console.log($('div').text(), $('div').text('ping'));
+}),'go');
+*/
+/*
+test ajax with
+$('body').xhr('/', {success:function(e){ console.log('success',this.status,this, e); }, error: function(e){ console.log('error',this.status,this,e); }, before:function(){ console.log('before', this); }, after:function(){ console.log('after', this); }}).each(function(){console.log('each',this)});
+*/
+</script>
+</head>
+<body>
+body
+<div id="a">a <a href="#">#</a></div>
+<div id="b">b <a href="#"># <span>span</span></a></div>
+<div id="c">c <a href="#">#</a></div>
+</body>
+</html>
