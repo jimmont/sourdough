@@ -20,19 +20,18 @@ var $ = function(){
 	while(i<l){
 		_ = arguments[i++];
 		if(_.constructor == String){ // css selector
-			self[self.length++] = document;
-			self.query(_);
+			push.apply(self, slice.call($().query(_),0));
 		}else if(_ instanceof NodeList){
 			push.apply(self, slice.call(_,0));
 		}else if(_.constructor == Array){
 			// map the list items over onto self object
 			push.apply(self,slice.call($.apply(null,_),0));
-	// TODO optimize??  self.uniq();
 		}else if(_ && (_.constructor != Function) ){
 			push.call(self, _);
 		};
+		// TODO do we want to do something with functions?
 	};
-	// TODO do we want to do something with functions?
+	if(l>1) self = self.uniq();
 
 	return self;
 };
@@ -435,10 +434,13 @@ push: function(l){
 	return this;
 },
 uniq: function(){
-	var list = new $;
+	var list = new $, u;
 	list.selector = this.selector;
+	u = list.uid;
 	this.each(function(){
-		list.push(this);
+		this.uid = this.uid || uid();
+		if(u[this.uid]) return;
+		u[this.uid] = list.push(this);
 	});
 	list.noDupe = 1;
 	return list;

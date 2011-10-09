@@ -2,11 +2,13 @@
 <head>
 <script src="sourdough.js"></script>
 <script>
-
-
 $(document).each(function(){
 }).listen('DOMContentLoaded',function(){
 var o = $('div',['body',document,window],{a:1});
+console.log(o.length,o);
+o = $('div',['body',document,window],{a:1},'a');
+console.log(o.length,o);
+o = $('a','a');
 console.log(o.length,o);
 return;
 	console.log('--',this);
