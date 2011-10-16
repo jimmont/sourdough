@@ -6,10 +6,10 @@ if(!document.querySelectorAll){
 // TODO ie compat, etc
 	return;
 }; // document.querySelectorAll
-var push = Array.prototype.push,
-	concat = Array.prototype.concat,
-	splice = Array.prototype.splice,
-	slice = Array.prototype.slice;
+var Ap = Array.prototype, push = Ap.push,
+	concat = Ap.concat,
+	splice = Ap.splice,
+	slice = Ap.slice;
 var $ = function(){
 	var _, undef, self = this, i=0, l=arguments.length;
 	if(!(self instanceof $)) self = new $();
@@ -74,50 +74,6 @@ MutationEvents == MutationEvent
 TextEvent (in FF this is same as UIEvent)
 *WheelEvent
 UIEvent == UIEvents
-
-MouseEvent
-click,contextmenu,dblclick,DOMMouseScroll,drag,dragdrop,dragend,dragenter,dragexit,draggesture,dragleave,dragover,dragstart,drop,mousedown,mousemove,mouseout,mouseover,mouseup,mousewheel,
-object.initMouseEvent (eventName, bubbles, cancelable, view, detail, screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, button, relatedTarget);
-
-Event
-DOMContentLoaded,afterprint,beforecopy,beforecut,beforepaste,beforeprint,beforeunload,blur,bounce,change,CheckboxStateChange,copy,cut,error,finish,focus,hashchange,help,input,load,offline,online,paste,RadioStateChange,readystatechange,reset,resize,scroll,search,select,selectionchange,selectstart,start,stop,submit,unload,
-object.initEvent (eventName, bubbles, cancelable);
-
-KeyEvent
-keydown,keypress,keyup
-Firefox: object.initKeyEvent (eventName, bubbles, cancelable, view, ctrlKey, altKey, shiftKey, metaKey, keyCode, charCode);
-IE9 and all others: object.initKeyboardEvent (eventName, bubbles, cancelable, view, ctrlKey, altKey, shiftKey, metaKey, keyCode, charCode);
-
-DragEvent
-beforecopy,beforecut,beforepaste,copy,cut,drag,dragend,dragenter,dragexit,draggesture,dragleave,dragover,dragstart,drop,paste,
-object.initDragEvent (eventName, bubbles, cancelable, view, detail, screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, button, relatedTarget, dataTransfer);
-
-MessageEvent
-message
-object.initMessageEvent (eventName, bubbles, cancelable, data, origin, lastEventId, source, ports);
-see postMessage
-
-MutationEvent
-DOMAttrModified,DOMCharacterDataModified,DOMNodeInserted,DOMNodeInsertedIntoDocument,DOMNodeRemoved,DOMNodeRemovedFromDocument,DOMSubtreeModified,
-object.initMutationEvent (eventName, bubbles, cancelable, relatedNode, prevValue, newValue, attrName, attrChange);
-
-object.initOverflowEvent (orient, horizontalOverflow, verticalOverflow);
-
-TextEvent
-textInput
-object.initTextEvent (eventName, bubbles, cancelable, view, data, inputMethod, locale);
-
-UIEvent
-abort,activate,beforeactivate,beforedeactivate,deactivate,DOMActivate,DOMFocusIn,DOMFocusOut,overflow,resize,scroll,select,underflow,
-object.initUIEvent (eventName, bubbles, cancelable, view, detail);
-
-TouchEvent
-touchstart,touchmove,touchend,touchcancel
-initTouchEvent(type, canBubble, cancelable, view, detail, screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, <TouchList>touches, <TouchList>targetTouches, <TouchList>changedTouches, scale, rotation);
-
-GestureEvent
-gesturestart,gesturechange,gestureend
-initGestureEvent(type, canBubble, cancelable, view, detail, screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, target, scale, rotation);
 */
 $.eventDefaults = {
 	default: function(v, props){
@@ -446,7 +402,6 @@ uniq: function(){
 	return list;
 },
 // TODO push,pop,shift,unshift,slice,concat
-
 animation: function(){
 	return this;
 }
