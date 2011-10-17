@@ -4,6 +4,9 @@
 <script>
 $(window).bind('DOMContentLoaded',function(e){
 	console.log(e.type,this);
+	console.log($().push(window,document,document.body));
+	console.log($(window,document).push(window,document,document.body));
+	console.log($(window,document).push(document.body));
 });
 
 if(!window.console) console = {log:function(){}};

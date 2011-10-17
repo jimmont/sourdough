@@ -1,4 +1,4 @@
-(function(){ load_time = (new Date()).getTime(); })();
+var load_time = (new Date()).getTime();
 
 (function(){
 if(window.$) return;
