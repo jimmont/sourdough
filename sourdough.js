@@ -26,10 +26,9 @@ var $ = function(){
 		}else if(_.constructor == Array){
 			// map the list items over onto self object
 			push.apply(self,slice.call($.apply(null,_),0));
-		}else if(_ && (_.constructor != Function) ){
+		}else if(_){
 			push.call(self, _);
-		};
-		// TODO do we want to do something with functions?
+	 	};
 	};
 	if(l>1) self = self.uniq();
 
@@ -62,19 +61,6 @@ var events = {
 	'touchstart,touchmove,touchend,touchcancel': 'TouchEvent,MouseEvent',
 	'gesturestart,gesturechange,gestureend': 'GestureEvent,MouseEvent'
 };
-/*
-Event == Events == HTMLEvents
-KeyboardEvent
-MessageEvent
-MouseEvent == MouseEvents
-MutationEvents == MutationEvent
-*ProgressEvent
-*StorageEvent
-*SVGZoomEvents
-TextEvent (in FF this is same as UIEvent)
-*WheelEvent
-UIEvent == UIEvents
-*/
 $.eventDefaults = {
 	default: function(v, props){
 		// TODO are the datatype defaults correct?
@@ -224,25 +210,6 @@ trigger: function(_type, _event){
 	});
 	return this;
 },
-children: function(){
-	return this;
-},
-parent: function(){
-	var list = $();
-	this.each(function(i,l){
-		if(l = l.parentNode) list.push(l);
-	});
-	return list;
-},
-parents: function(){
-	var list = $([document, document.documentElement, document.body]);
-	this.each(function(i,l){
-		while(l && (l = l.parentNode) && (l != document.body)){
-			list.push(l);
-		};
-	});
-	return list;
-},
 query: function(_){ // querySelectorAll
 	var list = [0,this.length], isDOMelement = false, j = 0;
 	this.selector = _;
@@ -262,110 +229,6 @@ query: function(_){ // querySelectorAll
 	splice.apply(this, list);
 	return this;
 }, // query
-
-animate: function(){
-	return this;
-}, // fade, show/hide, etc
-ajax: function(){
-	return this;
-},
-css: function(){
-	return this;
-},
-hasClass: function(){
-	return this;
-},
-offset: function(){
-	return this;
-}, // offsetLeft, scroll, etc, offsetParent, width, etc outside+inside the box
-attr: function(){
-	return this;
-},
-create: function(){
-// TODO create elements
-	var i=0,l=arguments.length;
-	while(i<l){
-
-	};
-	return this;
-},
-html: function(_html){
-	// TODO review window.innerHTML, need checks, esp Fragment.innerHTML
-	this.each(function(){
-		this.innerHTML = _html;
-	});
-	return this;
-},
-text: function(txt, append){
-	append = append || false;
-	var ct = document.createTextNode;
-	if(arguments.length){
-		this.each(function(){
-			if(append){ this.appendChild(ct(txt));
-			}else{ this.textContent = txt; }
-		});
-	return this;
-	}else if(this.length){
-	var list = [];
-		this.each(function(){
-			list.push(this.textContent);
-		});
-	return list.length > 1 ? list:(list.length?list[0]:'');
-	};
-},
-
-clone: function(deep){
-	var nodes = [];
-	this.each(function(){
-		nodes.push(this.cloneNode(deep||false));
-	});
-	return new $(nodes);
-},
-replace: function(l){
-	var list = $();
-	this.each(function(){
-		if(!l.nodeType) l = document.createTextNode(l);
-		list.push(this.parentNode.replaceChild(this, l));
-	});
-	return list;
-},
-remove: function(){
-	this.each(function(){
-		if(!this.parentNode) return;
-		this.parentNode.removeChild(this);
-	});
-	return this;
-},
-append: function(l){
-	// text-nodes or dom-nodes (like prepend)
-	var list = (l && l.is$) ? l : $(l), t = this;
-	// TODO does it make sense to loop?
-	this.each(function(){
-	// TODO when $('#b') fails this incorrectly creates a textnode
-		if(!l.nodeType) l = document.createTextNode(l);
-		this.appendChild(l);
-		list.push(l);
-	});
-	return list;
-},
-prepend: function(l){
-	return this.insertBefore(l, this.firstChild);
-},
-insertBefore: function(l, before){
-	// like append
-	var list = $(), ct = document.createTextNode;
-	this.each(function(){
-		if(!l.nodeType) l = ct(l);
-		this.appendChild(l);
-		list.push(l);
-	});
-	return list;
-},
-insertAfter: function(l, after){
-	if(after.nextSibling) return this.insertBefore(l, after.nextSibling);
-	return this.append(l);
-},
-
 each: function(fn){
 	var item, i=0, l=this.length;
 	while(i<l){
@@ -379,11 +242,12 @@ item: function(i){
 	i = i||0;
 	return this[i] || false;
 },
-push: function(l){
-// TODO push in multiple arguments
-	var u = this.uid;
-	l.uid = l.uid || uid();
-	if(!u[l.uid]){
+push: function(){
+	var i = 0, j = arguments.length, l, u = this.uid;
+	while(i<j){
+		l = arguments[i++];
+		l.uid = l.uid || uid();
+		if(u[l.uid]) continue;
 		u[l.uid] = true;
 		push.call(this, l);
 	};
@@ -400,10 +264,6 @@ uniq: function(){
 	});
 	list.noDupe = 1;
 	return list;
-},
-// TODO push,pop,shift,unshift,slice,concat
-animation: function(){
-	return this;
 }
 }; // $.prototype
 
