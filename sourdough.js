@@ -175,9 +175,13 @@ xhr: function(url, o){
 on: function(_event, fn, capture){
 	// TODO handle special case like ready, so if document.readyState = loaded/ready
 	// then just trigger the handler
+	
 	this.each(function(){
-		// TODO cache the handler, fn etc for removal
-		this.addEventListener(_event, fn, capture || false);
+		var _events = _event.split(/\s+/);
+		while(_event=_events.shift()){
+			// TODO cache the handler, fn etc for removal
+			this.addEventListener(_event, fn, capture || false);
+		};
 	});
 	return this;
 },
@@ -185,8 +189,11 @@ on: function(_event, fn, capture){
 off: function(_event, fn, capture){
 	// TODO, all args, event-name only, none:remove all events
 	this.each(function(){
-		// TODO grab handler from cache in certain cases
-		this.removeEventListener(_event, fn, capture || false);
+		var _events = _event.split(/\s+/);
+		while(_event=_events.shift()){
+			// TODO grab handler from cache in certain cases
+			this.removeEventListener(_event, fn, capture || false);
+		};
 	});
 	return this;
 },
