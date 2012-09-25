@@ -172,7 +172,7 @@ xhr: function(url, o){
 	return this;
 },
 //bind: subscribe: listen:
-bind: function(_event, fn, capture){
+on: function(_event, fn, capture){
 	// TODO handle special case like ready, so if document.readyState = loaded/ready
 	// then just trigger the handler
 	this.each(function(){
@@ -182,7 +182,7 @@ bind: function(_event, fn, capture){
 	return this;
 },
 // ignore: unsubscribe: ?
-unbind: function(_event, fn, capture){
+off: function(_event, fn, capture){
 	// TODO, all args, event-name only, none:remove all events
 	this.each(function(){
 		// TODO grab handler from cache in certain cases
@@ -268,7 +268,7 @@ uniq: function(){
 }; // $.prototype
 
 // setup synonyms
-var s, synonyms = 'subscribe:bind,listen:bind,after:insertAfter,before:insertBefore,find:query,ajax:xhr'.split(',');
+var s, synonyms = 'subscribe:on,listen:on,after:insertAfter,before:insertBefore,find:query,ajax:xhr'.split(',');
 while(s=synonyms.shift()){
 	s=s.split(':');
 	$.prototype[s[0]] = $.prototype[s[1]];
