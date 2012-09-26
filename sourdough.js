@@ -175,7 +175,6 @@ xhr: function(url, o){
 on: function(_event, fn, capture){
 	// TODO handle special case like ready, so if document.readyState = loaded/ready
 	// then just trigger the handler
-	
 	this.each(function(){
 		var _events = _event.split(/\s+/);
 		while(_event=_events.shift()){
@@ -199,22 +198,25 @@ off: function(_event, fn, capture){
 },
 // trigger: fire: dispatch:
 trigger: function(_type, _event){
-	// create and dispatch an event on elements
-	var v = _event || {};
-	// default eventType maps onto eventType, can set it directly via optional _event, or try to get it based on _type, otherwise default to '_custom'
-	v.eventType = v.eventType || $.eventType[_type] || $.eventType._custom;
-	v.type = _type;
-// TODO ? for MouseEvent do: v.relatedTarget = DOMELEMENT; or a way to interpolate things like this?
-	var e = document.createEvent(v.eventType.supported);
-	// do appropriate init: initEvent, initUIEvent, etc
-	$.eventDefaults[v.eventType.supported].call(e, v);
-	this.each(function(){
-		// TODO for types that aren't supported:
-		// how to apply original event props to new event so handler sees them?
-		// OR check to see that non-standard props are applied to the new event somehow
-		// OR normalize the event object
-		this.dispatchEvent(e);
-	});
+	var _types = _type.split(/\s+/);
+	while(_type = _types.shift()){
+		// create and dispatch an event on elements
+		var v = _event || {};
+		// default eventType maps onto eventType, can set it directly via optional _event, or try to get it based on _type, otherwise default to '_custom'
+		v.eventType = v.eventType || $.eventType[_type] || $.eventType._custom;
+		v.type = _type;
+	// TODO ? for MouseEvent do: v.relatedTarget = DOMELEMENT; or a way to interpolate things like this?
+		var e = document.createEvent(v.eventType.supported);
+		// do appropriate init: initEvent, initUIEvent, etc
+		$.eventDefaults[v.eventType.supported].call(e, v);
+		this.each(function(){
+			// TODO for types that aren't supported:
+			// how to apply original event props to new event so handler sees them?
+			// OR check to see that non-standard props are applied to the new event somehow
+			// OR normalize the event object
+				this.dispatchEvent(e);
+		});
+	};
 	return this;
 },
 query: function(_){ // querySelectorAll
@@ -275,11 +277,13 @@ uniq: function(){
 }; // $.prototype
 
 // setup synonyms
+/*
 var s, synonyms = 'subscribe:on,listen:on,after:insertAfter,before:insertBefore,find:query,ajax:xhr'.split(',');
 while(s=synonyms.shift()){
 	s=s.split(':');
 	$.prototype[s[0]] = $.prototype[s[1]];
 };
+*/
 
 // make some events dispatch to specific elements
 //$('body').listen('DOMContentLoaded',function(){ /*TODO trigger event on body,document,html */ },false);
